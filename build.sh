@@ -1,2 +1,2 @@
 javac Lox/Lox.java
-# java Lox.Lox
+java Lox.Lox
