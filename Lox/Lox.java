@@ -20,13 +20,13 @@ enum TokenType {
     IDENTIFIER, STRING, NUMBER,
     //keywords
     AND, OR, XOR, NOR, NAND, 
-    CLASS, FUNC,
+    CLASS, FUN,
     IF, ELSE, 
     FOR, WHILE, 
     TRUE, FALSE, 
     PRINT, SUPER,
     RETURN, VAR,
-    EOF
+    THIS, NIL, EOF
 }
 
 class Token {
@@ -59,7 +59,9 @@ public class Lox {
         List<Token> tokens = scanner.scanTokens();
         
         // For now, just print the tokens.
-        for (Token token: tokens) { System.out.println(token); }
+        for (Token token: tokens) { 
+            System.out.println(token); 
+        }
     }
     private static void runFile(String path) throws IOException {
         byte[] bytes = Files.readAllBytes(Paths.get(path));
