@@ -13,6 +13,7 @@ set(SOURCE
     src/chunk.c
     src/memory.c
     src/debug.c
+    src/value.c
 )
 
 add_executable(${PROJECT_NAME}
