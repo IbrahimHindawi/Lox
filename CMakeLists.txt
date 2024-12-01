@@ -10,6 +10,8 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 include_directories(src)
 set(SOURCE 
     src/main.c
+    src/chunk.c
+    src/memory.c
 )
 
 add_executable(${PROJECT_NAME}
