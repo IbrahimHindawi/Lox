@@ -1,3 +1,0 @@
-C:/devel/Lox/build/CMakeFiles/Lox.dir
-C:/devel/Lox/build/CMakeFiles/edit_cache.dir
-C:/devel/Lox/build/CMakeFiles/rebuild_cache.dir

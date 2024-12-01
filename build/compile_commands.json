@@ -1,8 +1,0 @@
-[
-{
-  "directory": "C:/devel/Lox/build",
-  "command": "C:\\PROGRA~1\\LLVM\\bin\\clang.exe -IC:/devel/Lox/src -O0 -g -Xclang -gcodeview -D_DEBUG -D_DLL -D_MT -Xclang --dependent-lib=msvcrtd -std=gnu99 -o CMakeFiles\\Lox.dir\\src\\main.c.obj -c C:\\devel\\Lox\\src\\main.c",
-  "file": "C:\\devel\\Lox\\src\\main.c",
-  "output": "CMakeFiles\\Lox.dir\\src\\main.c.obj"
-}
-]
