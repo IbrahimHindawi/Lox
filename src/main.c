@@ -1,5 +1,7 @@
+#ifdef VM
+
 #include <stdio.h>
-#include "core.h"
+#include <core.h>
 #include "chunk.h"
 #include "debug.h"
 
@@ -14,3 +16,11 @@ int main(int argc, char *argv[]) {
     freeChunk(&chunk);
     return 0;
 }
+
+#else
+
+#include <core.h>
+i32 main(i32 argc, char *argv[]) {
+}
+
+#endif

@@ -8,6 +8,7 @@ set(CMAKE_C_STANDARD 99)
 set(CMAKE_C_STANDARD_REQUIRED True)
 
 include_directories(src)
+include_directories(extern/haikal/src/meta/gen)
 set(SOURCE 
     src/main.c
     src/chunk.c
