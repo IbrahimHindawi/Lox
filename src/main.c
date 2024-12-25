@@ -26,7 +26,12 @@ int main(int argc, char *argv[]) {
 
 bool haderror = false;
 // char const source[] = "var x: i32 = 0;";
-char const source[] = "var x : int = 0;";
+char const source[] =
+    "var x : int = 0;\n"
+    "proc main() -> i32 {\n"
+    "    -> 0;\n"
+    "};\n";
+
 i32 start = 0;
 i32 current = 0;
 i32 line = 0;
@@ -47,48 +52,49 @@ enumdef(TokenType) {
     tk_ident, tk_string, tk_number,
     tk_and, tk_or, tk_if, tk_elif, tk_else, tk_true, tk_false,
     tk_print, tk_ret, tk_var, tk_for, tk_while, tk_struct, tk_proc,
-    tk_eof, tk_tokencount,
+    tk_eof,
+    tk_tokencount,
 };
 
 char const *getNameFromToken(TokenType tokentype) {
     switch (tokentype) {
-    case tk_lparen: return "tk_lparen"; break;
-    case tk_rparen: return "tk_rparen"; break;
-    case tk_lbrace: return "tk_lbrace"; break;
-    case tk_rbrace: return "tk_rbrace"; break;
-    case tk_comma: return "tk_comma"; break;
-    case tk_dot: return "tk_dot"; break;
-    case tk_minus: return "tk_minus"; break;
-    case tk_plus: return "tk_plus"; break;
-    case tk_semicolon: return "tk_semicolon"; break;
-    case tk_slash: return "tk_slash"; break;
-    case tk_star: return "tk_star"; break;
-    case tk_bang: return "tk_bang"; break;
-    case tk_bangeq: return "tk_bangeq"; break;
-    case tk_eq: return "tk_eq"; break;
-    case tk_eqeq: return "tk_eqeq"; break;
-    case tk_gt: return "tk_gt"; break;
-    case tk_gte: return "tk_gte"; break;
-    case tk_lt: return "tk_lt"; break;
-    case tk_lte: return "tk_lte"; break;
-    case tk_ident: return "tk_ident"; break;
-    case tk_string: return "tk_string"; break;
-    case tk_number: return "tk_number"; break;
-    case tk_and: return "tk_and"; break;
-    case tk_or: return "tk_or"; break;
-    case tk_if: return "tk_if"; break;
-    case tk_elif: return "tk_elif"; break;
-    case tk_else: return "tk_else"; break;
-    case tk_true: return "tk_true"; break;
-    case tk_false: return "tk_false"; break;
-    case tk_print: return "tk_print"; break;
-    case tk_ret: return "tk_ret"; break;
-    case tk_var: return "tk_var"; break;
-    case tk_for: return "tk_for"; break;
-    case tk_while: return "tk_while"; break;
-    case tk_struct: return "tk_struct"; break;
-    case tk_proc: return "tk_proc"; break;
-    case tk_eof: return "tk_eof"; break;
+        case tk_lparen: return "tk_lparen"; break;
+        case tk_rparen: return "tk_rparen"; break;
+        case tk_lbrace: return "tk_lbrace"; break;
+        case tk_rbrace: return "tk_rbrace"; break;
+        case tk_comma: return "tk_comma"; break;
+        case tk_dot: return "tk_dot"; break;
+        case tk_minus: return "tk_minus"; break;
+        case tk_plus: return "tk_plus"; break;
+        case tk_semicolon: return "tk_semicolon"; break;
+        case tk_slash: return "tk_slash"; break;
+        case tk_star: return "tk_star"; break;
+        case tk_bang: return "tk_bang"; break;
+        case tk_bangeq: return "tk_bangeq"; break;
+        case tk_eq: return "tk_eq"; break;
+        case tk_eqeq: return "tk_eqeq"; break;
+        case tk_gt: return "tk_gt"; break;
+        case tk_gte: return "tk_gte"; break;
+        case tk_lt: return "tk_lt"; break;
+        case tk_lte: return "tk_lte"; break;
+        case tk_ident: return "tk_ident"; break;
+        case tk_string: return "tk_string"; break;
+        case tk_number: return "tk_number"; break;
+        case tk_and: return "tk_and"; break;
+        case tk_or: return "tk_or"; break;
+        case tk_if: return "tk_if"; break;
+        case tk_elif: return "tk_elif"; break;
+        case tk_else: return "tk_else"; break;
+        case tk_true: return "tk_true"; break;
+        case tk_false: return "tk_false"; break;
+        case tk_print: return "tk_print"; break;
+        case tk_ret: return "tk_ret"; break;
+        case tk_var: return "tk_var"; break;
+        case tk_for: return "tk_for"; break;
+        case tk_while: return "tk_while"; break;
+        case tk_struct: return "tk_struct"; break;
+        case tk_proc: return "tk_proc"; break;
+        case tk_eof: return "tk_eof"; break;
     // case tk_tokencount:
     default: break;
     }
@@ -227,7 +233,6 @@ void scannerScanToken(Scanner *scanner) {
         case '}': addToken(scanner, tk_rbrace); break;
         case ',': addToken(scanner, tk_comma); break;
         case '.': addToken(scanner, tk_dot); break;
-        case '-': addToken(scanner, tk_minus); break;
         case '+': addToken(scanner, tk_plus); break;
         case ';': addToken(scanner, tk_semicolon); break;
         case '*': addToken(scanner, tk_star); break;
@@ -235,6 +240,7 @@ void scannerScanToken(Scanner *scanner) {
         case '=': addToken(scanner, scannerMatch(scanner, '=') ? tk_eqeq : tk_eq); break;
         case '<': addToken(scanner, scannerMatch(scanner, '=') ? tk_lte : tk_lt); break;
         case '>': addToken(scanner, scannerMatch(scanner, '=') ? tk_gte : tk_gt); break;
+        case '-': addToken(scanner, scannerMatch(scanner, '>') ? tk_ret : tk_minus); break;
         case '/':
             if (scannerMatch(scanner, '/')) {
                 while (scannerPeak(scanner) != '\n' && !scannerIsAtEnd(scanner)) {
@@ -264,7 +270,7 @@ void scannerScanToken(Scanner *scanner) {
 }
 
 void scannerScanTokens(Scanner *scanner) {
-    while(!scannerIsAtEnd(scanner)) {
+    while (!scannerIsAtEnd(scanner)) {
         start = current;
         scannerScanToken(scanner);
     }
@@ -277,7 +283,7 @@ i32 main(i32 argc, char *argv[]) {
     }
     Scanner scanner = {
         .source = bfromcstr(source),
-        .tokens = (hkList_TokenPayload *) hkList_TokenPayload_create(),
+        .tokens = hkList_TokenPayload_create(),
         .map = hkHashMap_TokenType_create(),
     };
     hkHashMap_TokenType_set(scanner.map, "and", tk_and);
@@ -304,6 +310,7 @@ i32 main(i32 argc, char *argv[]) {
         iter = iter->next; 
     }
 }
+
 #include <hkNode.c>
 #include <hkList.c>
 #include <hkHashMap.c>
