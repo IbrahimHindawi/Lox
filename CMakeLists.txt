@@ -9,12 +9,14 @@ set(CMAKE_C_STANDARD_REQUIRED True)
 
 include_directories(src)
 include_directories(extern/haikal/src/meta/gen)
+include_directories(extern/bstring/bstring)
 set(SOURCE 
     src/main.c
     src/chunk.c
     src/memory.c
     src/debug.c
     src/value.c
+    extern/bstring/bstring/bstrlib.c
 )
 
 add_executable(${PROJECT_NAME}
