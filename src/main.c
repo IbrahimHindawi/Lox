@@ -18,9 +18,9 @@ int main(int argc, char *argv[]) {
 }
 
 #else
-// haikal@hkNode:TokenPayload:s
-// haikal@hkList:TokenPayload:s
-// haikal@hkHashMap:TokenType:e
+// haikal@Node:TokenPayload:s
+// haikal@List:TokenPayload:s
+// haikal@Map:TokenType:e
 #include <core.h>
 #include <bstrlib.h>
 
@@ -125,14 +125,14 @@ bstring tokenToString(TokenPayload *token) {
     return result;
 }
 
-#include <hkNode.h>
-#include <hkList.h>
-#include <hkHashMap.h>
+#include <Node.h>
+#include <List.h>
+#include <Map.h>
 
 structdef(Scanner) {
     bstring source;
-    hkList_TokenPayload *tokens;
-    hkHashMap_TokenType *map;
+    List_TokenPayload *tokens;
+    Map_TokenType *map;
 };
 
 bool scannerIsAtEnd(Scanner *scanner) {
@@ -159,7 +159,7 @@ char scannerAdvance(Scanner *scanner) {
 
 void scannerAddTokenPayload(Scanner *scanner, TokenType type, void *literal) {
     bstring text = bmidstr(scanner->source, start, current - start);
-    hkList_TokenPayload_append(scanner->tokens, (TokenPayload){.tokentype = type, .lexeme = bdata(text), .literal = literal, line});
+    List_TokenPayload_append(scanner->tokens, (TokenPayload){.tokentype = type, .lexeme = bdata(text), .literal = literal, line});
 }
 
 void addToken(Scanner *scanner, TokenType type) {
@@ -215,7 +215,7 @@ void scannerIdentifier(Scanner *scanner) {
         scannerAdvance(scanner);
     }
     bstring text = bmidstr(scanner->source, start, current - start);
-    TokenType *type = hkHashMap_TokenType_get(scanner->map, bdata(text));
+    TokenType *type = Map_TokenType_get(scanner->map, bdata(text));
     if (!type) {
         // type = &(TokenType){tk_ident};
         addToken(scanner, tk_ident);
@@ -274,7 +274,7 @@ void scannerScanTokens(Scanner *scanner) {
         start = current;
         scannerScanToken(scanner);
     }
-    hkList_TokenPayload_append(scanner->tokens, (TokenPayload) {.tokentype = tk_eof, .lexeme = "", .literal = NULL, .line = 0});
+    List_TokenPayload_append(scanner->tokens, (TokenPayload) {.tokentype = tk_eof, .lexeme = "", .literal = NULL, .line = 0});
 };
 
 i32 main(i32 argc, char *argv[]) {
@@ -283,26 +283,26 @@ i32 main(i32 argc, char *argv[]) {
     }
     Scanner scanner = {
         .source = bfromcstr(source),
-        .tokens = hkList_TokenPayload_create(),
-        .map = hkHashMap_TokenType_create(),
+        .tokens = List_TokenPayload_create(),
+        .map = Map_TokenType_create(),
     };
-    hkHashMap_TokenType_set(scanner.map, "and", tk_and);
-    hkHashMap_TokenType_set(scanner.map, "or", tk_or);
-    hkHashMap_TokenType_set(scanner.map, "true", tk_true);
-    hkHashMap_TokenType_set(scanner.map, "false", tk_false);
-    hkHashMap_TokenType_set(scanner.map, "if", tk_if);
-    hkHashMap_TokenType_set(scanner.map, "else", tk_else);
-    hkHashMap_TokenType_set(scanner.map, "elif", tk_elif);
-    hkHashMap_TokenType_set(scanner.map, "print", tk_print);
-    hkHashMap_TokenType_set(scanner.map, "ret", tk_ret);
-    hkHashMap_TokenType_set(scanner.map, "var", tk_var);
-    hkHashMap_TokenType_set(scanner.map, "for", tk_for);
-    hkHashMap_TokenType_set(scanner.map, "while", tk_while);
-    hkHashMap_TokenType_set(scanner.map, "struct", tk_struct);
-    hkHashMap_TokenType_set(scanner.map, "proc", tk_proc);
+    Map_TokenType_set(scanner.map, "and", tk_and);
+    Map_TokenType_set(scanner.map, "or", tk_or);
+    Map_TokenType_set(scanner.map, "true", tk_true);
+    Map_TokenType_set(scanner.map, "false", tk_false);
+    Map_TokenType_set(scanner.map, "if", tk_if);
+    Map_TokenType_set(scanner.map, "else", tk_else);
+    Map_TokenType_set(scanner.map, "elif", tk_elif);
+    Map_TokenType_set(scanner.map, "print", tk_print);
+    Map_TokenType_set(scanner.map, "ret", tk_ret);
+    Map_TokenType_set(scanner.map, "var", tk_var);
+    Map_TokenType_set(scanner.map, "for", tk_for);
+    Map_TokenType_set(scanner.map, "while", tk_while);
+    Map_TokenType_set(scanner.map, "struct", tk_struct);
+    Map_TokenType_set(scanner.map, "proc", tk_proc);
     scannerScanTokens(&scanner);
-    // hkList_Token_print(scanner.tokens);
-    hkNode_TokenPayload *iter = scanner.tokens->head; 
+    // List_Token_print(scanner.tokens);
+    Node_TokenPayload *iter = scanner.tokens->head; 
     printf("scanner.tokens.length: %llu\n", scanner.tokens->length); 
     while (iter) { 
         // printf("scanner.tokens: {%s, %p}\n", getTokenPayloadName(iter->data.literal), iter->next); 
@@ -311,8 +311,8 @@ i32 main(i32 argc, char *argv[]) {
     }
 }
 
-#include <hkNode.c>
-#include <hkList.c>
-#include <hkHashMap.c>
+#include <Node.c>
+#include <List.c>
+#include <Map.c>
 
 #endif
