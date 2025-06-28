@@ -1,37 +1,11 @@
-#ifdef VM
-
-#include <stdio.h>
-#include <core.h>
-#include "chunk.h"
-#include "debug.h"
-
-int main(int argc, char *argv[]) {
-    Chunk chunk = {0};
-    initChunk(&chunk);
-    int constant = addConstant(&chunk, 1.2);
-    writeChunk(&chunk, OP_CONSTANT, 123);
-    writeChunk(&chunk, constant, 123);
-    writeChunk(&chunk, OP_RETURN, 123);
-    disassembleChunk(&chunk, "test chunk");
-    freeChunk(&chunk);
-    return 0;
-}
-
-#else
 // haikal@Node:TokenPayload:s
 // haikal@List:TokenPayload:s
 // haikal@Map:TokenType:e
 #include <core.h>
 #include <bstrlib.h>
+#include <stdio.h>
 
 bool haderror = false;
-// char const source[] = "var x: i32 = 0;";
-char const source[] =
-    "var x : int = 0;\n"
-    "proc main() -> i32 {\n"
-    "    -> 0;\n"
-    "};\n";
-
 i32 start = 0;
 i32 current = 0;
 i32 line = 0;
@@ -45,9 +19,10 @@ void crash() {
 }
 
 
-enumdef(TokenType) {
+typedef enum TokenType TokenType;
+enum TokenType {
     tk_lparen, tk_rparen, tk_lbrace, tk_rbrace,
-    tk_comma, tk_dot, tk_minus, tk_plus, tk_semicolon, tk_slash, tk_star,
+    tk_comma, tk_dot, tk_minus, tk_plus, tk_colon, tk_semicolon, tk_slash, tk_star,
     tk_bang, tk_bangeq, tk_eq, tk_eqeq, tk_gt, tk_gte, tk_lt, tk_lte,
     tk_ident, tk_string, tk_number,
     tk_and, tk_or, tk_if, tk_elif, tk_else, tk_true, tk_false,
@@ -66,6 +41,7 @@ char const *getNameFromToken(TokenType tokentype) {
         case tk_dot: return "tk_dot"; break;
         case tk_minus: return "tk_minus"; break;
         case tk_plus: return "tk_plus"; break;
+        case tk_colon: return "tk_colon"; break;
         case tk_semicolon: return "tk_semicolon"; break;
         case tk_slash: return "tk_slash"; break;
         case tk_star: return "tk_star"; break;
@@ -101,7 +77,8 @@ char const *getNameFromToken(TokenType tokentype) {
     return "";
 }
 
-structdef(TokenPayload) {
+typedef struct TokenPayload TokenPayload;
+struct TokenPayload {
     TokenType tokentype;
     char const *lexeme;
     void *literal;
@@ -119,7 +96,9 @@ bstring tokenToString(TokenPayload *token) {
     // char const *result = "";
     bstring result = bfromcstr("");
     // bcatcstr(result, token->tokentype);
+    bcatcstr(result, "'");
     bcatcstr(result, token->lexeme);
+    bcatcstr(result, "'");
     bcatcstr(result, " ");
     bcatcstr(result, token->literal);
     return result;
@@ -129,14 +108,15 @@ bstring tokenToString(TokenPayload *token) {
 #include <List.h>
 #include <Map.h>
 
-structdef(Scanner) {
+typedef struct Scanner Scanner;
+struct Scanner {
     bstring source;
     List_TokenPayload *tokens;
     Map_TokenType *map;
 };
 
 bool scannerIsAtEnd(Scanner *scanner) {
-    return current >= scanner->source->mlen;
+    return current >= scanner->source->slen;
 }
 
 char peek(Scanner *scanner) {
@@ -147,7 +127,7 @@ char peek(Scanner *scanner) {
 }
 
 char peekNext(Scanner *scanner) {
-    if (current + 1 >= scanner->source->mlen) {
+    if (current + 1 >= scanner->source->slen) {
         return '\0';
     }
     return scanner->source->data[current + 1];
@@ -234,13 +214,14 @@ void scannerScanToken(Scanner *scanner) {
         case ',': addToken(scanner, tk_comma); break;
         case '.': addToken(scanner, tk_dot); break;
         case '+': addToken(scanner, tk_plus); break;
-        case ';': addToken(scanner, tk_semicolon); break;
         case '*': addToken(scanner, tk_star); break;
         case '!': addToken(scanner, scannerMatch(scanner, '=') ? tk_bangeq : tk_bang); break;
         case '=': addToken(scanner, scannerMatch(scanner, '=') ? tk_eqeq : tk_eq); break;
         case '<': addToken(scanner, scannerMatch(scanner, '=') ? tk_lte : tk_lt); break;
         case '>': addToken(scanner, scannerMatch(scanner, '=') ? tk_gte : tk_gt); break;
         case '-': addToken(scanner, scannerMatch(scanner, '>') ? tk_ret : tk_minus); break;
+        case ';': addToken(scanner, tk_semicolon); break;
+        case ':': addToken(scanner, tk_colon); break;
         case '/':
             if (scannerMatch(scanner, '/')) {
                 while (scannerPeak(scanner) != '\n' && !scannerIsAtEnd(scanner)) {
@@ -251,6 +232,7 @@ void scannerScanToken(Scanner *scanner) {
             }
         break;
         case ' ':
+        case '\0':
         case '\r':
         case '\t':
             break;
@@ -263,7 +245,7 @@ void scannerScanToken(Scanner *scanner) {
             } else if (isAlpha(c)) {
                 scannerIdentifier(scanner);
             } else {
-                error(line, "Unexpected character.\n"); 
+                printf("error: line: %d, message: Unexpected character: '%c'.\n", line, c);
             }
             break;
     }
@@ -277,10 +259,32 @@ void scannerScanTokens(Scanner *scanner) {
     List_TokenPayload_append(scanner->tokens, (TokenPayload) {.tokentype = tk_eof, .lexeme = "", .literal = NULL, .line = 0});
 };
 
-i32 main(i32 argc, char *argv[]) {
-    for (i32 i = 0; i < sizeofarray(source); ++i) {
-        printf("%c, ", source[i]);
+// char const source[] =
+//     "var x : int = 0;\n"
+//     "proc main() -> i32 {\n"
+//     "    -> 0;\n"
+//     "};\n";
+#define source_max_buffer_size 1024 * 1024
+char source[source_max_buffer_size];
+size_t source_size;
+
+i32 compile() {
+    u64 line_count = 1;
+    printf("line %04llu:    ", line_count);
+    for (i32 i = 0; i < source_size; ++i) {
+            if (source[i] == '\n') {
+                printf("\nline %04llu:    ", line_count);
+                line_count += 1;
+            }
+            else {
+                printf("%c", source[i]);
+            }
+        if (source[i] == 0) {
+            printf("EOF\n");
+            break;
+        }
     }
+    // printf("source:\n%s", source);
     Scanner scanner = {
         .source = bfromcstr(source),
         .tokens = List_TokenPayload_create(),
@@ -289,10 +293,11 @@ i32 main(i32 argc, char *argv[]) {
     Map_TokenType_set(scanner.map, "and", tk_and);
     Map_TokenType_set(scanner.map, "or", tk_or);
     Map_TokenType_set(scanner.map, "true", tk_true);
+    Map_TokenType_set(scanner.map, "true", tk_true);
     Map_TokenType_set(scanner.map, "false", tk_false);
     Map_TokenType_set(scanner.map, "if", tk_if);
-    Map_TokenType_set(scanner.map, "else", tk_else);
     Map_TokenType_set(scanner.map, "elif", tk_elif);
+    Map_TokenType_set(scanner.map, "else", tk_else);
     Map_TokenType_set(scanner.map, "print", tk_print);
     Map_TokenType_set(scanner.map, "ret", tk_ret);
     Map_TokenType_set(scanner.map, "var", tk_var);
@@ -309,10 +314,48 @@ i32 main(i32 argc, char *argv[]) {
         printf("scanner.tokens: {%s, %s, %p}\n", iter->data.lexeme, getNameFromToken(iter->data.tokentype), iter->next); 
         iter = iter->next; 
     }
+    return 0;
+}
+
+i32 main(i32 argc, char *argv[]) {
+    if (argc == 1) {
+        printf("Error: Invalid Input! Please specify a file to compile.");
+        return 1;
+    }
+    else {
+        FILE *input;
+        if (fopen_s(&input, argv[1], "r") != 0) {
+            printf("Error: File %s not found!\n", argv[1]);
+            return 1;
+        }
+        printf("sizeof long: %llu\n", sizeof(long));
+        fseek(input, 0, SEEK_END);
+        source_size = (size_t)ftell(input);
+        rewind(input);
+
+        if (source_size == -1L) {
+            printf("Error: ftell failed.\n");
+            return 1;
+        }
+        printf("Found %llu bytes in file: %s.\n", source_size, argv[1]);
+        size_t read_bytes = fread_s(source, source_max_buffer_size, sizeof(char), source_size, input);
+        if (read_bytes != (size_t)source_size) {
+            if (feof(input)) {
+                printf("Unexpected end of file reached.\n");
+            } else if (ferror(input)) {
+                perror("Error reading from file");
+            } else {
+                printf("Warning: Only %zu bytes read out of %zu.\n", read_bytes, source_size);
+            }
+        }
+        source_size = read_bytes;
+        source[source_size-1] = '\0';
+        fclose(input);
+    }
+    compile();
+    return 0;
 }
 
 #include <Node.c>
 #include <List.c>
 #include <Map.c>
-
-#endif

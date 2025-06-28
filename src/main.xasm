@@ -1,0 +1,14 @@
+.macros
+zeroreg: macro(reg) = {
+    xor reg, reg
+}
+
+.data
+num: u32 = 0
+
+.code
+main: proc() = {
+    zeroreg(rax)
+    ret
+}
+.end

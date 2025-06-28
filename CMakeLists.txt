@@ -1,4 +1,4 @@
-include(ExternalProject)
+# include(ExternalProject)
 cmake_minimum_required(VERSION 3.10)
 
 project(Lox VERSION 1.0 LANGUAGES C)
@@ -12,11 +12,11 @@ include_directories(extern/haikal/src/meta/gen)
 include_directories(extern/bstring/bstring)
 set(SOURCE 
     src/main.c
-    src/chunk.c
-    src/memory.c
-    src/debug.c
-    src/value.c
     extern/bstring/bstring/bstrlib.c
+    # src/chunk.c
+    # src/memory.c
+    # src/debug.c
+    # src/value.c
 )
 
 add_executable(${PROJECT_NAME}
