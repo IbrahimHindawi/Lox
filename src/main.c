@@ -18,7 +18,9 @@ void crash() {
     exit(1);
 }
 
-
+//--------------------------------
+// tokenizer
+//--------------------------------
 typedef enum TokenType TokenType;
 enum TokenType {
     tk_lparen, tk_rparen, tk_lbrace, tk_rbrace,
@@ -107,6 +109,10 @@ bstring tokenToString(TokenPayload *token) {
 #include <Node.h>
 #include <List.h>
 #include <Map.h>
+
+//--------------------------------
+// scanner
+//--------------------------------
 
 typedef struct Scanner Scanner;
 struct Scanner {
@@ -259,11 +265,6 @@ void scannerScanTokens(Scanner *scanner) {
     List_TokenPayload_append(scanner->tokens, (TokenPayload) {.tokentype = tk_eof, .lexeme = "", .literal = NULL, .line = 0});
 };
 
-// char const source[] =
-//     "var x : int = 0;\n"
-//     "proc main() -> i32 {\n"
-//     "    -> 0;\n"
-//     "};\n";
 #define source_max_buffer_size 1024 * 1024
 char source[source_max_buffer_size];
 size_t source_size;
@@ -328,7 +329,6 @@ i32 main(i32 argc, char *argv[]) {
             printf("Error: File %s not found!\n", argv[1]);
             return 1;
         }
-        printf("sizeof long: %llu\n", sizeof(long));
         fseek(input, 0, SEEK_END);
         source_size = (size_t)ftell(input);
         rewind(input);
